@@ -6,6 +6,7 @@ import toolsRoutes from "./routes/tools.routes";
 import educationRoutes from "./routes/education.routes";
 import teamToolsRoutes from "./routes/teamTools.routes";
 
+
 import cors from "cors";
 
 const app = express();
@@ -17,6 +18,8 @@ app.use("/api/profile-teams", profileTeamRoutes);
 app.use("/api/tools", toolsRoutes);
 app.use("/api", educationRoutes);
 app.use("/api", teamToolsRoutes);
+
+
 
 app.get("/", (req, res) => {
   res.status(200).json({
