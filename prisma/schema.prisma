@@ -1,0 +1,165 @@
+// ================= DATASOURCE & GENERATOR =================
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+//
+// ======================== USER TEAM & PROFILE ========================
+//
+model UserTeam {
+  id       String      @id @default(auto()) @map("_id") @db.ObjectId
+  email    String      @unique
+  password String
+  profile  ProfilTeam?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProfilTeam {
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  foto     String?
+  bio      String?
+  roles    String?
+  location String?
+  phone    String?
+
+  userTeamId String   @unique @db.ObjectId
+  userTeam   UserTeam @relation(fields: [userTeamId], references: [id])
+
+  educations Education[]
+  tools      ProfilTeamTools[]
+  admins     ProfilAdmin[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+//
+// ======================== USER ADMIN & PROFILE ========================
+//
+model UserAdmin {
+  id       String       @id @default(auto()) @map("_id") @db.ObjectId
+  email    String       @unique
+  password String
+  username String
+  profile  ProfilAdmin?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProfilAdmin {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  phone     String?
+  bio       String?
+  greeting  String?
+  location  String?
+  workyType String?
+  title     String?
+  icons     String?
+
+  userAdminId String    @unique @db.ObjectId
+  userAdmin   UserAdmin @relation(fields: [userAdminId], references: [id])
+
+  profilTeamId String?     @db.ObjectId
+  profilTeam   ProfilTeam? @relation(fields: [profilTeamId], references: [id])
+
+  educations Education[]
+  projects   Project[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+//
+// ======================== EDUCATION ========================
+//
+model Education {
+  id             String  @id @default(auto()) @map("_id") @db.ObjectId
+  degree         String
+  institution    String
+  graduationYear String?
+
+  profilTeamId String?     @db.ObjectId
+  profilTeam   ProfilTeam? @relation(fields: [profilTeamId], references: [id])
+
+  profilAdminId String?      @db.ObjectId
+  profilAdmin   ProfilAdmin? @relation(fields: [profilAdminId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+//
+// ======================== TOOLS ========================
+//
+model Tools {
+  id    String  @id @default(auto()) @map("_id") @db.ObjectId
+  title String
+  image String?
+  url   String?
+
+  teamTools    ProfilTeamTools[]
+  projectTools ProjectTools[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProfilTeamTools {
+  id           String @id @default(auto()) @map("_id") @db.ObjectId
+  profilTeamId String @db.ObjectId
+  toolsId      String @db.ObjectId
+
+  profilTeam ProfilTeam @relation(fields: [profilTeamId], references: [id])
+  tools      Tools      @relation(fields: [toolsId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+//
+// ======================== PROJECT ========================
+//
+model Project {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  image       String?
+  status      String?
+
+  profilAdminId String      @db.ObjectId
+  profilAdmin   ProfilAdmin @relation(fields: [profilAdminId], references: [id])
+
+  tools ProjectTools[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProjectTools {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  toolsId   String @db.ObjectId
+  projectId String @db.ObjectId
+
+  tools   Tools   @relation(fields: [toolsId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ======================== TOKEN BLACKLIST ========================
+model TokenBlacklist {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  token     String   @unique
+  createdAt DateTime @default(now())
+}
