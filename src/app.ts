@@ -7,6 +7,7 @@ import educationRoutes from "./routes/education.routes";
 import teamToolsRoutes from "./routes/teamTools.routes";
 import experienceRoutes from "./routes/experience.routes";
 import achievementRoutes from "./routes/achievement.routes";
+import albumRoutes from "./routes/album.routes";
 
 import { initGridFS } from "./utils/gridfs";
 import cors from "cors";
@@ -27,6 +28,7 @@ app.use("/api", educationRoutes);
 app.use("/api", teamToolsRoutes);
 app.use("/api", experienceRoutes);
 app.use("/api/achievement", achievementRoutes);
+app.use("/api/album", albumRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({

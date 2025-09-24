@@ -206,3 +206,15 @@ model Achievement {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// ======================== Album ========================
+model MyAlbum {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  width     Int?
+  height    Int?
+  url       String
+  publicId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
