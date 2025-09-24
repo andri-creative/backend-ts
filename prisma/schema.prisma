@@ -163,3 +163,46 @@ model TokenBlacklist {
   token     String   @unique
   createdAt DateTime @default(now())
 }
+
+// ======================== Experience ========================
+model Experience {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  companyLogo      String
+  title            String
+  company          String
+  location         String
+  period           String
+  duration         String
+  type             String
+  mode             String
+  responsibilities String[]
+}
+
+// ======================== Achievement ========================
+enum Category {
+  sertifikat
+  penghargaan
+  lainnya
+}
+
+enum Level {
+  Beginner
+  Intermediate
+  Advanced
+}
+
+model Achievement {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  src         String
+  issuer      String
+  label       String
+  issueDate   String
+  description String
+  category    Category
+  level       Level
+  link        String
+  tags        String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

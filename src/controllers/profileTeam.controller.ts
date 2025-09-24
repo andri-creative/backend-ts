@@ -1,6 +1,8 @@
+// src\controllers\profileTeam.controller.ts
 import { Request, Response } from "express";
 import prisma from "../utils/prisma";
 import { Prisma } from "@prisma/client";
+import { error } from "console";
 
 // Type helper agar Prisma tahu include apa saja yang kita pakai
 type ProfileWithRelations = Prisma.ProfilTeamGetPayload<{
@@ -131,3 +133,4 @@ export const deleteProfile = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Gagal menghapus profil" });
   }
 };
+
