@@ -85,7 +85,11 @@ export const uploadAlbum = [
 // ✅ GET semua album
 export const getAlbums = async (req: Request, res: Response) => {
   try {
-    const albums = await prisma.myAlbum.findMany();
+    const albums = await prisma.myAlbum.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
     res.json(albums);
   } catch (err: any) {
     console.error("Get albums error:", err);
