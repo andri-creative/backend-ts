@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Document</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-red-900 p-10">
+<div class="min-h-screen relative bg-red-500 overflow-hidden" id="container">
+<div class="absolute" id="icon" style="bottom: 0; left: 0;">
+<div class="h-10 w-10 bg-blue-300 rounded-full flex justify-center items-center">
+<span>✅</span>
+</div>
+</div>
+</div>
+<script>
+const icon = document.getElementById('icon');
+const container = document.getElementById('container');
+let x = 0;
+let y = 0;
+let speedX = 3;
+let speedY = 2;
+let startTime = Date.now();
+let phase = 'moving5'; // moving5, returning, paused, moving3
+
+// Fungsi untuk mendapatkan kecepatan random
+function getRandomSpeed() {
+  const speed = 0.5 + Math.random() * 1.5; // kecepatan antara 0.5-2
+  const direction = Math.random() < 0.5 ? 1 : -1; // arah random
+  return speed * direction;
+}
+
+function animate() {
+  const containerRect = container.getBoundingClientRect();
+  const iconSize = 40;
+  const currentTime = Date.now();
+  const elapsed = (currentTime - startTime) / 1000; // dalam detik
+  
+  // Fase 1: Bergerak selama 5 detik
+  if (phase === 'moving5') {
+    x += speedX;
+    y += speedY;
+    
+    if (x <= 0 || x >= containerRect.width - iconSize) {
+      speedX = -speedX;
+      x = Math.max(0, Math.min(x, containerRect.width - iconSize));
+    }
+    
+    if (y <= 0 || y >= containerRect.height - iconSize) {
+      speedY = -speedY;
+      y = Math.max(0, Math.min(y, containerRect.height - iconSize));
+    }
+    
+    if (elapsed >= 15) {
+      phase = 'returning';
+    }
+  }
+  
+  // Fase 2: Kembali ke posisi awal
+  else if (phase === 'returning') {
+    const returnSpeed = 5;
+    
+    if (x > 0) x = Math.max(0, x - returnSpeed);
+    if (x < 0) x = Math.min(0, x + returnSpeed);
+    if (y > 0) y = Math.max(0, y - returnSpeed);
+    if (y < 0) y = Math.min(0, y + returnSpeed);
+    
+    // Jika sudah di posisi awal
+    if (Math.abs(x) < 1 && Math.abs(y) < 1) {
+      x = 0;
+      y = 0;
+      phase = 'paused';
+      startTime = Date.now();
+    }
+  }
+  
+  // Fase 3: Berhenti selama 2 detik
+  else if (phase === 'paused') {
+    if (elapsed >= 2) {
+      phase = 'moving3';
+      startTime = Date.now();
+      // Set kecepatan random untuk pergerakan berikutnya
+      speedX = getRandomSpeed();
+      speedY = getRandomSpeed();
+    }
+  }
+  
+  // Fase 4: Bergerak selama 3 detik
+  else if (phase === 'moving3') {
+    x += speedX;
+    y += speedY;
+    
+    if (x <= 0 || x >= containerRect.width - iconSize) {
+      speedX = -speedX;
+      x = Math.max(0, Math.min(x, containerRect.width - iconSize));
+    }
+    
+    if (y <= 0 || y >= containerRect.height - iconSize) {
+      speedY = -speedY;
+      y = Math.max(0, Math.min(y, containerRect.height - iconSize));
+    }
+    
+    if (elapsed >= 3) {
+      phase = 'moving5';
+      startTime = Date.now();
+      // Set kecepatan random untuk pergerakan berikutnya
+      speedX = getRandomSpeed();
+      speedY = getRandomSpeed();
+    }
+  }
+  
+  // Terapkan posisi
+  icon.style.left = x + 'px';
+  icon.style.bottom = y + 'px';
+  
+  requestAnimationFrame(animate);
+}
+
+// Set kecepatan random di awal
+speedX = getRandomSpeed();
+speedY = getRandomSpeed();
+
+animate();
+</script>
+</body>
+</html>

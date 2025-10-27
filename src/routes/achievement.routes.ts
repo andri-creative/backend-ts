@@ -3,7 +3,7 @@ import { Router } from "express";
 import {
   getAllAchievement,
   getAchievementById,
-  createAchiement,
+  createAchievement,
   updateAchiement,
   deleteAchiement,
 } from "../controllers/achievement.controller";
@@ -14,9 +14,9 @@ const router = Router();
 router.get("/", getAllAchievement);
 router.get("/:id", getAchievementById);
 
-router.post("/", upload.single("src"), createAchiement);
+router.post("/", upload.single("files"), createAchievement);
 
-router.put("/:id", upload.single("src"), updateAchiement);
+router.put("/:id", upload.single("files"), updateAchiement);
 
 router.delete("/:id", deleteAchiement);
 

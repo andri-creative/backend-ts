@@ -6,14 +6,15 @@ import {
   getAllTools,
   getToolById,
   updateTool,
+  upload,
 } from "../controllers/tools.controller";
 
 const router = Router();
 
 router.get("/", getAllTools);
 router.get("/:id", getToolById);
-router.post("/", createTool);
-router.put("/:id", updateTool);
+router.post("/", upload.single("files"), createTool);
+router.put("/:id", upload.single("files"), updateTool);
 router.delete("/:id", deleteTool);
 
 export default router;

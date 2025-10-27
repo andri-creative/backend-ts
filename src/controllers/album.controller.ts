@@ -68,7 +68,7 @@ export const uploadAlbum = [
               url: finalResult.secure_url,
               width: finalResult.width,
               height: finalResult.height,
-              publicId: finalResult.public_id, // <--- penting untuk delete nanti
+              publicId: finalResult.public_id,
             },
           });
         })

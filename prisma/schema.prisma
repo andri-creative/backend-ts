@@ -12,33 +12,79 @@ generator client {
 // ======================== USER TEAM & PROFILE ========================
 //
 model UserTeam {
-  id       String      @id @default(auto()) @map("_id") @db.ObjectId
-  email    String      @unique
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  name     String?
+  email    String  @unique
   password String
-  profile  ProfilTeam?
+  otp      String?
+  isActive Boolean @default(false)
+
+  profile ProfilTeam?
+
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  PasswordResetToken PasswordResetToken[]
+}
+
+model ProfilTeam {
+  id              String  @id @default(auto()) @map("_id") @db.ObjectId
+  foto            String?
+  bio             String?
+  tahun           Int?
+  locationEdikasi String?
+  phone           String?
+  lokasiUser      String?
+  degree          String?
+
+  userTeamId String   @unique @db.ObjectId
+  userTeam   UserTeam @relation(fields: [userTeamId], references: [id])
+
+  roles ProfilTeamRoles[]
+
+  tools ProfilTeamTools[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model ProfilTeam {
-  id       String  @id @default(auto()) @map("_id") @db.ObjectId
-  name     String
-  foto     String?
-  bio      String?
-  roles    String?
-  location String?
-  phone    String?
+model ProfilTeamRoles {
+  id           String @id @default(auto()) @map("_id") @db.ObjectId
+  profilTeamId String @db.ObjectId
+  roleId       String @db.ObjectId
 
-  userTeamId String   @unique @db.ObjectId
-  userTeam   UserTeam @relation(fields: [userTeamId], references: [id])
+  profilTeam ProfilTeam @relation(fields: [profilTeamId], references: [id], onDelete: Cascade)
+  role       Roles      @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
-  educations Education[]
-  tools      ProfilTeamTools[]
-  admins     ProfilAdmin[]
+  @@unique([profilTeamId, roleId])
+}
 
+model ProfilTeamTools {
+  id           String @id @default(auto()) @map("_id") @db.ObjectId
+  profilTeamId String @db.ObjectId
+  toolsId      String @db.ObjectId
+
+  profilTeam ProfilTeam @relation(fields: [profilTeamId], references: [id])
+  tools      Tools      @relation(fields: [toolsId], references: [id])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @unique @db.ObjectId
+  user      UserTeam @relation(fields: [userId], references: [id])
+  otp       String
+  expiredAt DateTime
+}
+
+//
+// ==================== Blacklisted Token ================
+//
+model BlacklistedToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  token     String   @unique
+  expiresAt DateTime
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  @@index([expiresAt])
 }
 
 //
@@ -69,30 +115,11 @@ model ProfilAdmin {
   userAdminId String    @unique @db.ObjectId
   userAdmin   UserAdmin @relation(fields: [userAdminId], references: [id])
 
-  profilTeamId String?     @db.ObjectId
-  profilTeam   ProfilTeam? @relation(fields: [profilTeamId], references: [id])
+  profilTeamId String? @db.ObjectId
+  // profilTeam   ProfilTeam? @relation(fields: [profilTeamId], references: [id])
 
-  educations Education[]
-  projects   Project[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-//
-// ======================== EDUCATION ========================
-//
-model Education {
-  id             String  @id @default(auto()) @map("_id") @db.ObjectId
-  degree         String
-  institution    String
-  graduationYear String?
-
-  profilTeamId String?     @db.ObjectId
-  profilTeam   ProfilTeam? @relation(fields: [profilTeamId], references: [id])
-
-  profilAdminId String?      @db.ObjectId
-  profilAdmin   ProfilAdmin? @relation(fields: [profilAdminId], references: [id])
+  // educations Education[]
+  // projects Project[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -114,30 +141,42 @@ model Tools {
   updatedAt DateTime @updatedAt
 }
 
-model ProfilTeamTools {
-  id           String @id @default(auto()) @map("_id") @db.ObjectId
-  profilTeamId String @db.ObjectId
-  toolsId      String @db.ObjectId
+model Roles {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  title String
 
-  profilTeam ProfilTeam @relation(fields: [profilTeamId], references: [id])
-  tools      Tools      @relation(fields: [toolsId], references: [id])
+  teamRoles ProfilTeamRoles[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+// model ProfilTeamTools {
+//   id           String @id @default(auto()) @map("_id") @db.ObjectId
+//   profilTeamId String @db.ObjectId
+//   toolsId      String @db.ObjectId
+
+//   profilTeam ProfilTeam @relation(fields: [profilTeamId], references: [id])
+//   tools      Tools      @relation(fields: [toolsId], references: [id])
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
 //
 // ======================== PROJECT ========================
 //
 model Project {
-  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   description String?
   image       String?
-  status      String?
-
-  profilAdminId String      @db.ObjectId
-  profilAdmin   ProfilAdmin @relation(fields: [profilAdminId], references: [id])
+  status      Boolean  @default(false)
+  techStack   String[]
+  role        String?
+  demoUrl     String?
+  repoUrl     String?
+  features    String[]
 
   tools ProjectTools[]
 
@@ -186,25 +225,36 @@ enum Category {
 }
 
 enum Level {
-  Beginner
-  Intermediate
-  Advanced
+  beginner
+  intermediate
+  advanced
+}
+
+enum UploadStatus {
+  pending
+  completed
+  failed
+  no_file
 }
 
 model Achievement {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
-  src         String
+  src         String   @default("")
   issuer      String
   label       String
   issueDate   String
   description String
   category    Category
   level       Level
-  link        String
   tags        String[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  status Boolean @default(true)
+
+  uploadStatus UploadStatus @default(no_file)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ======================== Album ========================
@@ -218,3 +268,14 @@ model MyAlbum {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// ======================== Ranting ========================
+model Ranting {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  label     String
+  rating    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ================= Team =============
