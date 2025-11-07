@@ -21,7 +21,7 @@ import projectRouter from "./routes/project/project.routes";
 import fileRoutes from "./routes/files.routes";
 
 import contactRouter from "./routes/contact.routes";
-
+import dashboardRouter from "./routes/dashboard.routes";
 import { initGridFS } from "./utils/gridfs";
 import cors from "cors";
 
@@ -51,6 +51,8 @@ app.use("/api/auth", risetPassRouter);
 app.use("/api/roles", RolesRouter);
 app.use("/api/project", projectRouter);
 app.use("/api/contact", contactRouter);
+
+app.use("/api", dashboardRouter);
 
 app.get("/", (req, res) => {
   res.status(200).json({

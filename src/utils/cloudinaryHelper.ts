@@ -1,38 +1,39 @@
 import cloudinary from "./cloudinary";
+import { UploadApiResponse } from "cloudinary";
 
-export function UploadToolsCloudinary(
+/**
+ * Upload file ke Cloudinary (PDF → konversi otomatis)
+ */
+export async function UploadToolsCloudinary(
   fileBuffer: Buffer,
   originalName: string,
   isPdf: boolean = false
-) {
-  return new Promise<any>((resolve, reject) => {
+): Promise<UploadApiResponse> {
+  return new Promise((resolve, reject) => {
     const now = new Date();
-    const fileName = `${now.getFullYear()}${(now.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}${now.getDate().toString().padStart(2, "0")}_${now
-      .getHours()
-      .toString()
-      .padStart(2, "0")}${now.getMinutes().toString().padStart(2, "0")}${now
-      .getSeconds()
-      .toString()
-      .padStart(2, "0")}_${originalName}`;
+    const timestamp = `${now.getFullYear()}${String(
+      now.getMonth() + 1
+    ).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}_${String(
+      now.getHours()
+    ).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(
+      now.getSeconds()
+    ).padStart(2, "0")}`;
+    const publicId = `temp-achievements/${timestamp}_${originalName.replace(
+      /\.[^/.]+$/,
+      ""
+    )}`;
 
     const uploadOptions: any = {
       folder: "temp-achievements",
-      public_id: fileName.replace(/\.[^/.]+$/, ""),
+      public_id: publicId,
       overwrite: true,
-      resource_type: isPdf ? "image" : "auto",
       access_mode: "public",
     };
 
-    // Jika PDF, gunakan transformation untuk convert ke image
     if (isPdf) {
-      uploadOptions.resource_type = "image";
-      uploadOptions.transformation = [
-        { format: "png" }, // Convert to PNG
-        { page: 1 }, // Ambil halaman pertama saja
-        { width: 800, height: 1000, crop: "limit" },
-      ];
+      // PDF → upload sebagai RAW, lalu konversi via URL
+      uploadOptions.resource_type = "raw";
+      uploadOptions.format = "pdf";
     } else {
       uploadOptions.resource_type = "auto";
     }
@@ -41,7 +42,8 @@ export function UploadToolsCloudinary(
       uploadOptions,
       (error, result) => {
         if (error) return reject(error);
-        resolve({ ...result, fileName });
+        if (!result) return reject(new Error("Upload gagal"));
+        resolve(result);
       }
     );
 
@@ -49,36 +51,42 @@ export function UploadToolsCloudinary(
   });
 }
 
-export async function deleteFromCloudinary(publicId: string) {
+/**
+ * Hapus file dari Cloudinary
+ */
+export async function deleteFromCloudinary(publicId: string): Promise<any> {
   try {
     const result = await cloudinary.uploader.destroy(publicId);
+    console.log(`Cloudinary dihapus: ${publicId}`);
     return result;
   } catch (error) {
-    console.error("Error deleting from Cloudinary:", error);
+    console.error("Gagal hapus Cloudinary:", error);
     throw error;
   }
 }
 
+/**
+ * Cleanup file temp > 1 jam
+ */
 export async function cleanupTempCloudinaryFiles() {
   try {
-    // Hapus file yang lebih dari 1 jam di folder temp-achievements
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+
     const result = await cloudinary.api.resources({
       type: "upload",
       prefix: "temp-achievements/",
-      max_results: 100,
+      max_results: 500,
     });
 
-    const now = Date.now();
-    const ONE_HOUR = 60 * 60 * 1000;
+    const deletePromises = result.resources
+      .filter((r: any) => new Date(r.created_at).getTime() < oneHourAgo)
+      .map((r: any) => cloudinary.uploader.destroy(r.public_id));
 
-    for (const resource of result.resources) {
-      const createdAt = new Date(resource.created_at).getTime();
-      if (now - createdAt > ONE_HOUR) {
-        await cloudinary.uploader.destroy(resource.public_id);
-        console.log(`🗑️ Cleanup Cloudinary temp file: ${resource.public_id}`);
-      }
+    if (deletePromises.length > 0) {
+      await Promise.all(deletePromises);
+      console.log(`Cleanup: ${deletePromises.length} file temp dihapus`);
     }
   } catch (error) {
-    console.error("Error cleaning up Cloudinary temp files:", error);
+    console.error("Cleanup Cloudinary gagal:", error);
   }
 }

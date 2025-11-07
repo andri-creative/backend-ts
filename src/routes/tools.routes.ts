@@ -1,7 +1,7 @@
 // src\routes\tools.routes.ts
 import { Router } from "express";
 import {
-  createTool,
+  // createTool,
   deleteTool,
   getAllTools,
   getToolById,
@@ -9,11 +9,12 @@ import {
   upload,
 } from "../controllers/tools.controller";
 
+import { createTool } from "../controllers/tools/tools.controller";
 const router = Router();
 
 router.get("/", getAllTools);
 router.get("/:id", getToolById);
-router.post("/", upload.single("files"), createTool);
+router.post("/", createTool);
 router.put("/:id", upload.single("files"), updateTool);
 router.delete("/:id", deleteTool);
 

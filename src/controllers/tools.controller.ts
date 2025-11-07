@@ -41,12 +41,17 @@ function UploadToolsCloudinary(fileBuffer: Buffer, originalName: string) {
 
 export const getAllTools = async (req: Request, res: Response) => {
   try {
-    const tools = await prisma.tools.findMany();
+    const tools = await getAllToolsData();
     res.json(tools);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Gagal mengambil semua tools" });
   }
+};
+
+// Retuen data
+export const getAllToolsData = async () => {
+  return await prisma.tools.findMany();
 };
 
 export const getToolById = async (req: Request, res: Response) => {

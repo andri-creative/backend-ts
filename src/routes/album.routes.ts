@@ -1,11 +1,12 @@
 // src\routes\album.routes.ts
 import { Router } from "express";
 import {
-  uploadAlbum,
   getAlbums,
   getAlbumById,
   deleteAlbum,
 } from "../controllers/album.controller";
+import { uploadAlbum } from "../controllers/album/album.controller";
+
 const router = Router();
 
 router.post("/", uploadAlbum);

@@ -6,17 +6,10 @@ import { Request, Response } from "express";
 export const getAllRantings = async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
-    const limit = 20;
-    const skip = (page - 1) * limit;
+    const limit = parseInt(req.query.limit as string) || 20;
 
-    const rantings = await prisma.ranting.findMany({
-      skip: skip,
-      take: limit,
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
+    // ambil data dari "service"
+    const rantings = await getAllRantingsData({ page, limit });
     const totalCount = await prisma.ranting.count();
     const stats = await getRantingStats(req, res);
 
@@ -41,6 +34,45 @@ export const getAllRantings = async (req: Request, res: Response) => {
       message: "Internal server error",
     });
   }
+};
+
+export const getAllRantingsData = async ({
+  page = 1,
+  limit = 20,
+}: {
+  page?: number;
+  limit?: number;
+}) => {
+  const skip = (page - 1) * limit;
+
+  // total semua data ranting
+  const totalCount = await prisma.ranting.count();
+
+  // ambil data ranting sesuai page & limit
+  const rantings = await prisma.ranting.findMany({
+    skip,
+    take: limit,
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      rating: true,
+      label: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  const totalPages = Math.ceil(totalCount / limit);
+
+  return {
+    rantings,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalItems: totalCount,
+      itemsPerPage: limit,
+    },
+  };
 };
 
 export const createRanting = async (
@@ -135,6 +167,65 @@ export const getRantingStats = async (req: Request, res: Response) => {
       success: false,
       message: "Internal server error",
     });
+  }
+};
+
+// Tambahkan fungsi baru khusus untuk internal use (tidak merusak existing)
+export const getRantingStatsData = async () => {
+  try {
+    const averageRating = await prisma.ranting.aggregate({
+      _avg: {
+        rating: true,
+      },
+      _count: {
+        rating: true,
+      },
+    });
+
+    const distribution = await prisma.ranting.groupBy({
+      by: ["rating"],
+      _count: {
+        rating: true,
+      },
+    });
+
+    const rantingDistribution: RantingState["rantingDistribution"] = {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+    };
+    distribution.forEach((item) => {
+      switch (item.rating) {
+        case 1:
+          rantingDistribution["1"] = item._count.rating;
+          break;
+        case 2:
+          rantingDistribution["2"] = item._count.rating;
+          break;
+        case 3:
+          rantingDistribution["3"] = item._count.rating;
+          break;
+        case 4:
+          rantingDistribution["4"] = item._count.rating;
+          break;
+        case 5:
+          rantingDistribution["5"] = item._count.rating;
+          break;
+        default:
+          break;
+      }
+    });
+
+    return {
+      averageRating: averageRating._avg.rating || 0,
+      totalRating: averageRating._count.rating || 0,
+      rantingDistribution,
+    };
+  } catch (error) {
+    console.error("Error fetching ranting stats data:", error);
+    throw error; // Biarkan error ditangkap oleh caller
   }
 };
 

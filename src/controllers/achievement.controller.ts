@@ -280,12 +280,46 @@ export const createAchievement = async (req: Request, res: Response) => {
 
 export const getAllAchievement = async (req: Request, res: Response) => {
   try {
-    const achievement = await prisma.achievement.findMany();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+
+    const achievement = await getAllAchievementData({ page, limit });
     res.json(achievement);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Gagal mengambil suamu achievent" });
   }
+};
+
+export const getAllAchievementData = async ({
+  page = 1,
+  limit = 20,
+}: {
+  page?: number;
+  limit?: number;
+}) => {
+  const skip = (page - 1) * limit;
+
+  return await prisma.achievement.findMany({
+    skip,
+    take: limit,
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      src: true,
+      issuer: true,
+      label: true,
+      issueDate: true,
+      description: true,
+      category: true,
+      level: true,
+      tags: true,
+      status: true,
+      uploadStatus: true,
+      createdAt: true,
+    },
+  });
 };
 
 export const getAchievementById = async (req: Request, res: Response) => {

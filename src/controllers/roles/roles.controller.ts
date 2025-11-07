@@ -4,12 +4,17 @@ import prisma from "../../utils/prisma";
 
 export const getAllRoles = async (req: Request, res: Response) => {
   try {
-    const role = await prisma.roles.findMany();
+    const role = await getAllRolesData();
 
-    res.status(200).json({message: "Data all", role});
+    res.status(200).json({ message: "Data all", role });
   } catch (error) {
     console.log(error);
   }
+};
+
+// Return data
+export const getAllRolesData = async () => {
+  return await prisma.roles.findMany();
 };
 
 export const getByIdRoles = async (req: Request, res: Response) => {
@@ -31,9 +36,8 @@ export const CreateRoles = async (req: Request, res: Response) => {
   try {
     const { title } = req.body;
 
-  let data;
+    let data;
     if (Array.isArray(title)) {
-     
       data = await Promise.all(
         title.map(async (t) =>
           prisma.roles.create({
@@ -42,12 +46,10 @@ export const CreateRoles = async (req: Request, res: Response) => {
         )
       );
     } else {
-      
       data = await prisma.roles.create({
         data: { title },
       });
     }
-
 
     res.status(200).json({ message: "Roles berhasil", data });
   } catch (error) {
