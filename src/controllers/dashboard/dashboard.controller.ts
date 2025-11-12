@@ -70,7 +70,10 @@ export const getAllAchievementData = async ({
 }) => {
   const skip = (page - 1) * limit;
 
-  return await prisma.achievement.findMany({
+  // total semua data achievement
+  const totalCount = await prisma.achievement.count();
+
+  const achievement = await prisma.achievement.findMany({
     skip,
     take: limit,
     orderBy: { createdAt: "desc" },
@@ -90,6 +93,18 @@ export const getAllAchievementData = async ({
       createdAt: true,
     },
   });
+
+  const totalPages = Math.ceil(totalCount / limit);
+
+  return {
+    achievement,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalItems: totalCount,
+      itemsPerPage: limit,
+    },
+  };
 };
 
 export const getAllRantingsData = async ({

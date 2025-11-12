@@ -40,7 +40,7 @@ router.delete("/:id", deleteAchiement);
 
 router.post(
   "/",
-  upload.single("file"),
+  upload.single("files"),
   createAchievementWithUpload
 );
 
