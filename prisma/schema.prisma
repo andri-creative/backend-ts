@@ -178,6 +178,7 @@ model Project {
   demoUrl     String?
   repoUrl     String?
   features    String[]
+  pinned      Boolean  @default(false)
 
   tools ProjectTools[]
 

@@ -9,25 +9,26 @@ const storage = multer.memoryStorage();
 export const upload = multer({ storage });
 
 // Helper Cloudenary
-function UploadToolsCloudinary(fileBuffer: Buffer, originalName: string) {
+function UploadToolsCloudinary(fileBuffer: Buffer) {
   return new Promise<any>((resolve, reject) => {
     const now = new Date();
-    const fileName = `${now.getFullYear()}${(now.getMonth() + 1)
+    const fileName = `${now.getSeconds().toString().padStart(2, "0")}${now
+      .getMinutes()
       .toString()
-      .padStart(2, "0")}${now.getDate().toString().padStart(2, "0")}_${now
-      .getHours()
+      .padStart(2, "0")}${now.getHours().toString().padStart(2, "0")}${now
+      .getDate()
       .toString()
-      .padStart(2, "0")}${now.getMinutes().toString().padStart(2, "0")}${now
-      .getSeconds()
+      .padStart(2, "0")}${(now.getMonth() + 1)
       .toString()
-      .padStart(2, "0")}_${originalName}`;
+      .padStart(2, "0")}${now.getFullYear()}`;
 
     const stream = cloudinary.uploader.upload_stream(
       {
         folder: "Project",
         resource_type: "image",
-        public_id: fileName.replace(/\.[^/.]+$/, ""),
+        public_id: `${fileName}.webp`,
         overwrite: true,
+        format: "webp",
       },
       (error, result) => {
         if (error) return reject(error);
@@ -45,19 +46,19 @@ export const getAllProject = async (req: Request, res: Response) => {
       include: {
         tools: {
           include: {
-            tools: true
-          }
-        }
+            tools: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: "desc",
+      },
     });
 
     // Format response agar lebih clean
-    const formattedProjects = projects.map(project => ({
+    const formattedProjects = projects.map((project) => ({
       ...project,
-      tools: project.tools.map(tool => tool.tools)
+      tools: project.tools.map((tool) => tool.tools),
     }));
 
     res.status(200).json({
@@ -75,34 +76,34 @@ export const getAllProject = async (req: Request, res: Response) => {
 
 export const getByIdProject = async (req: Request, res: Response) => {
   const { id } = req.params;
-  
+
   try {
-    const project = await prisma.project.findUnique({ 
+    const project = await prisma.project.findUnique({
       where: { id },
       include: {
         tools: {
           include: {
-            tools: true
-          }
-        }
-      }
+            tools: true,
+          },
+        },
+      },
     });
 
     if (!project) {
-      return res.status(404).json({ 
-        message: "Project not found" 
+      return res.status(404).json({
+        message: "Project not found",
       });
     }
 
     // Format response
     const formattedProject = {
       ...project,
-      tools: project.tools.map(tool => tool.tools)
+      tools: project.tools.map((tool) => tool.tools),
     };
 
-    res.status(200).json({ 
-      message: "Project retrieved successfully", 
-      project: formattedProject 
+    res.status(200).json({
+      message: "Project retrieved successfully",
+      project: formattedProject,
     });
   } catch (error) {
     console.error("Error getting project by id:", error);
@@ -130,21 +131,17 @@ export const createProject = async (req: Request, res: Response) => {
     if (!req.file) {
       return res.status(400).json({
         message: "File gambar harus ada",
-        error: "Image file is required"
+        error: "Image file is required",
       });
     }
 
     // req.file.buffer sudah berupa Buffer dari multer
     const compressedImg = await sharp(req.file.buffer)
-      .toFormat("jpeg")
-      .jpeg({ quality: 70 })
+      .webp({ quality: 80 })
       .toBuffer();
 
     // Upload ke Cloudinary
-    const uploadResult = await UploadToolsCloudinary(
-      compressedImg,
-      req.file.originalname
-    );
+    const uploadResult = await UploadToolsCloudinary(compressedImg);
 
     const imgProjectUrl = uploadResult.secure_url;
 
@@ -156,28 +153,31 @@ export const createProject = async (req: Request, res: Response) => {
       // Jika sudah array, gunakan langsung
       if (Array.isArray(techStack)) {
         parsedTechStack = techStack;
-      } 
+      }
       // Jika string, coba parse sebagai JSON
       else if (typeof techStack === "string") {
         // Trim whitespace
         const trimmed = techStack.trim();
-        
+
         // Cek apakah dimulai dengan [ (array JSON)
         if (trimmed.startsWith("[")) {
           parsedTechStack = JSON.parse(trimmed);
-        } 
+        }
         // Jika bukan JSON array, split by comma
         else {
-          parsedTechStack = trimmed.split(",").map(item => item.trim()).filter(item => item);
+          parsedTechStack = trimmed
+            .split(",")
+            .map((item) => item.trim())
+            .filter((item) => item);
         }
-      } 
-      else {
+      } else {
         parsedTechStack = [];
       }
     } catch (e) {
       return res.status(400).json({
         message: "Format techStack tidak valid",
-        error: "techStack harus berupa array JSON atau string dipisah koma. Contoh: [\"React\",\"Node.js\"] atau \"React, Node.js\"",
+        error:
+          'techStack harus berupa array JSON atau string dipisah koma. Contoh: ["React","Node.js"] atau "React, Node.js"',
       });
     }
 
@@ -185,25 +185,27 @@ export const createProject = async (req: Request, res: Response) => {
       // Jika sudah array, gunakan langsung
       if (Array.isArray(features)) {
         parsedFeatures = features;
-      } 
+      }
       // Jika string, coba parse sebagai JSON
       else if (typeof features === "string") {
         const trimmed = features.trim();
-        
+
         if (trimmed.startsWith("[")) {
           parsedFeatures = JSON.parse(trimmed);
-        } 
-        else {
-          parsedFeatures = trimmed.split(",").map(item => item.trim()).filter(item => item);
+        } else {
+          parsedFeatures = trimmed
+            .split(",")
+            .map((item) => item.trim())
+            .filter((item) => item);
         }
-      } 
-      else {
+      } else {
         parsedFeatures = [];
       }
     } catch (e) {
       return res.status(400).json({
         message: "Format features tidak valid",
-        error: "features harus berupa array JSON atau string dipisah koma. Contoh: [\"Feature 1\",\"Feature 2\"] atau \"Feature 1, Feature 2\"",
+        error:
+          'features harus berupa array JSON atau string dipisah koma. Contoh: ["Feature 1","Feature 2"] atau "Feature 1, Feature 2"',
       });
     }
 
@@ -213,36 +215,42 @@ export const createProject = async (req: Request, res: Response) => {
       try {
         if (Array.isArray(tools)) {
           // Jika sudah array, gunakan langsung
-          parsedToolIds = tools.map((id: string) => id.trim()).filter((id: string) => id);
-        } 
-        else if (typeof tools === "string") {
+          parsedToolIds = tools
+            .map((id: string) => id.trim())
+            .filter((id: string) => id);
+        } else if (typeof tools === "string") {
           const trimmed = tools.trim();
-          
+
           // Jika string array JSON: ["id1", "id2"] atau ['id1', 'id2']
           if (trimmed.startsWith("[")) {
             const parsed = JSON.parse(trimmed);
             if (Array.isArray(parsed)) {
-              parsedToolIds = parsed.map((id: string) => String(id).trim()).filter((id: string) => id);
+              parsedToolIds = parsed
+                .map((id: string) => String(id).trim())
+                .filter((id: string) => id);
             }
           }
           // Jika string dengan koma: "id1, id2, id3"
           else if (trimmed.includes(",")) {
-            parsedToolIds = trimmed.split(",").map((id: string) => id.trim()).filter((id: string) => id);
+            parsedToolIds = trimmed
+              .split(",")
+              .map((id: string) => id.trim())
+              .filter((id: string) => id);
           }
           // Single ID
           else if (trimmed) {
             parsedToolIds = [trimmed];
           }
         }
-        
+
         // Debug log
         console.log("Parsed Tool IDs:", parsedToolIds);
-        
       } catch (e) {
         console.error("Error parsing tools:", e);
         return res.status(400).json({
           message: "Format tools tidak valid",
-          error: "tools harus berupa array Tools ID. Contoh: [\"68d6c837fc973c153c852dbe\", \"68dce3f4ebc8384c9546e959\"]",
+          error:
+            'tools harus berupa array Tools ID. Contoh: ["68d6c837fc973c153c852dbe", "68dce3f4ebc8384c9546e959"]',
         });
       }
     }
@@ -259,21 +267,25 @@ export const createProject = async (req: Request, res: Response) => {
         repoUrl,
         image: imgProjectUrl,
         status: false,
+        pinned: false,
         // Create ProjectTools yang menghubungkan Project dengan Tools
-        tools: parsedToolIds.length > 0 ? {
-          create: parsedToolIds.map((toolId: string) => ({
-            toolsId: toolId, // ID dari Tools
-            // projectId akan otomatis diisi oleh Prisma
-          }))
-        } : undefined,
+        tools:
+          parsedToolIds.length > 0
+            ? {
+                create: parsedToolIds.map((toolId: string) => ({
+                  toolsId: toolId, // ID dari Tools
+                  // projectId akan otomatis diisi oleh Prisma
+                })),
+              }
+            : undefined,
       },
       include: {
         tools: {
           include: {
-            tools: true // Include data Tools untuk response
-          }
-        }
-      }
+            tools: true, // Include data Tools untuk response
+          },
+        },
+      },
     });
 
     res.status(201).json({
@@ -289,7 +301,6 @@ export const createProject = async (req: Request, res: Response) => {
   }
 };
 
-
 export const updateProject = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -302,6 +313,7 @@ export const updateProject = async (req: Request, res: Response) => {
       role,
       demoUrl,
       repoUrl,
+      pinned,
     } = req.body;
 
     // Ambil data project yang ada
@@ -322,29 +334,28 @@ export const updateProject = async (req: Request, res: Response) => {
       // Hapus foto lama dari Cloudinary jika ada
       if (existingProject.image) {
         try {
-          const urlParts = existingProject.image.split('/');
-          const uploadIndex = urlParts.findIndex(part => part === 'upload');
+          const urlParts = existingProject.image.split("/");
+          const uploadIndex = urlParts.findIndex((part) => part === "upload");
           if (uploadIndex !== -1) {
-            const publicIdWithExt = urlParts.slice(uploadIndex + 2).join('/');
-            const publicId = publicIdWithExt.replace(/\.[^/.]+$/, '');
+            const publicIdWithExt = urlParts.slice(uploadIndex + 2).join("/");
+            const publicId = publicIdWithExt.replace(/\.[^/.]+$/, "");
             await cloudinary.uploader.destroy(publicId);
             console.log(`Old image deleted from Cloudinary: ${publicId}`);
           }
         } catch (cloudinaryError) {
-          console.error("Error deleting old image from Cloudinary:", cloudinaryError);
+          console.error(
+            "Error deleting old image from Cloudinary:",
+            cloudinaryError
+          );
         }
       }
 
       // Upload foto baru
       const compressedImg = await sharp(req.file.buffer)
-        .toFormat("jpeg")
-        .jpeg({ quality: 70 })
+        .webp({ quality: 80 })
         .toBuffer();
 
-      const uploadResult = await UploadToolsCloudinary(
-        compressedImg,
-        req.file.originalname
-      );
+      const uploadResult = await UploadToolsCloudinary(compressedImg);
 
       imgProjectUrl = uploadResult.secure_url;
     }
@@ -355,14 +366,15 @@ export const updateProject = async (req: Request, res: Response) => {
       try {
         if (Array.isArray(techStack)) {
           parsedTechStack = techStack;
-        } 
-        else if (typeof techStack === "string") {
+        } else if (typeof techStack === "string") {
           const trimmed = techStack.trim();
           if (trimmed.startsWith("[")) {
             parsedTechStack = JSON.parse(trimmed);
-          } 
-          else {
-            parsedTechStack = trimmed.split(",").map((item: string) => item.trim()).filter((item: string) => item);
+          } else {
+            parsedTechStack = trimmed
+              .split(",")
+              .map((item: string) => item.trim())
+              .filter((item: string) => item);
           }
         }
       } catch (e) {
@@ -379,14 +391,15 @@ export const updateProject = async (req: Request, res: Response) => {
       try {
         if (Array.isArray(features)) {
           parsedFeatures = features;
-        } 
-        else if (typeof features === "string") {
+        } else if (typeof features === "string") {
           const trimmed = features.trim();
           if (trimmed.startsWith("[")) {
             parsedFeatures = JSON.parse(trimmed);
-          } 
-          else {
-            parsedFeatures = trimmed.split(",").map((item: string) => item.trim()).filter((item: string) => item);
+          } else {
+            parsedFeatures = trimmed
+              .split(",")
+              .map((item: string) => item.trim())
+              .filter((item: string) => item);
           }
         }
       } catch (e) {
@@ -402,26 +415,29 @@ export const updateProject = async (req: Request, res: Response) => {
     if (tools) {
       try {
         if (Array.isArray(tools)) {
-          parsedToolIds = tools.map((id: string) => id.trim()).filter((id: string) => id);
-        } 
-        else if (typeof tools === "string") {
+          parsedToolIds = tools
+            .map((id: string) => id.trim())
+            .filter((id: string) => id);
+        } else if (typeof tools === "string") {
           const trimmed = tools.trim();
           if (trimmed.startsWith("[")) {
             const parsed = JSON.parse(trimmed);
             if (Array.isArray(parsed)) {
-              parsedToolIds = parsed.map((id: string) => String(id).trim()).filter((id: string) => id);
+              parsedToolIds = parsed
+                .map((id: string) => String(id).trim())
+                .filter((id: string) => id);
             }
-          }
-          else if (trimmed.includes(",")) {
-            parsedToolIds = trimmed.split(",").map((id: string) => id.trim()).filter((id: string) => id);
-          }
-          else if (trimmed) {
+          } else if (trimmed.includes(",")) {
+            parsedToolIds = trimmed
+              .split(",")
+              .map((id: string) => id.trim())
+              .filter((id: string) => id);
+          } else if (trimmed) {
             parsedToolIds = [trimmed];
           }
         }
-        
+
         console.log("Parsed Tool IDs for update:", parsedToolIds);
-        
       } catch (e) {
         return res.status(400).json({
           message: "Format tools tidak valid",
@@ -458,14 +474,15 @@ export const updateProject = async (req: Request, res: Response) => {
         ...(demoUrl && { demoUrl }),
         ...(repoUrl && { repoUrl }),
         ...(imgProjectUrl && { image: imgProjectUrl }),
+        ...(pinned !== undefined && { pinned }),
       },
       include: {
         tools: {
           include: {
-            tools: true
-          }
-        }
-      }
+            tools: true,
+          },
+        },
+      },
     });
 
     res.status(200).json({
@@ -480,6 +497,7 @@ export const updateProject = async (req: Request, res: Response) => {
     });
   }
 };
+
 export const deleteProject = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -498,14 +516,14 @@ export const deleteProject = async (req: Request, res: Response) => {
     // 2. Hapus gambar dari Cloudinary jika ada
     if (project.image) {
       try {
-        const urlParts = project.image.split('/');
-        const uploadIndex = urlParts.findIndex(part => part === 'upload');
+        const urlParts = project.image.split("/");
+        const uploadIndex = urlParts.findIndex((part) => part === "upload");
         if (uploadIndex !== -1) {
           // Ambil bagian setelah 'upload' dan version (v1234567890)
-          const publicIdWithExt = urlParts.slice(uploadIndex + 2).join('/');
+          const publicIdWithExt = urlParts.slice(uploadIndex + 2).join("/");
           // Hapus extension (.jpg, .png, dll)
-          const publicId = publicIdWithExt.replace(/\.[^/.]+$/, '');
-          
+          const publicId = publicIdWithExt.replace(/\.[^/.]+$/, "");
+
           // Hapus dari Cloudinary
           await cloudinary.uploader.destroy(publicId);
           console.log(`Image deleted from Cloudinary: ${publicId}`);
