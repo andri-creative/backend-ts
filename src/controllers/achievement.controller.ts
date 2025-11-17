@@ -316,6 +316,7 @@ export const getAllAchievementData = async ({
       level: true,
       tags: true,
       status: true,
+      pinned: true,
       uploadStatus: true,
       createdAt: true,
     },
