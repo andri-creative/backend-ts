@@ -7,7 +7,10 @@ import {
   downloadFromCloudinary,
   deleteFromCloudinary,
 } from "../../services/achievement.cloudinary.service";
-import { uploadToGridFS , deleteFromGridFS} from "../../services/achevement.gridfs.service";
+import {
+  uploadToGridFS,
+  deleteFromGridFS,
+} from "../../services/achevement.gridfs.service";
 import { saveAchievementToDB } from "../../services/achevementprisma.service";
 
 export const createAchievementWithUpload = async (
@@ -66,6 +69,7 @@ export const createAchievementWithUpload = async (
       level,
       tags,
       src: gridfsUrl,
+      pinned: false,
     });
 
     await deleteFromCloudinary(publicId);
@@ -100,6 +104,7 @@ export const updateAchievementWithUpload = async (
       category,
       level,
       tags,
+      pinned,
     } = req.body;
 
     const file = req.file;
@@ -159,6 +164,7 @@ export const updateAchievementWithUpload = async (
         description,
         category,
         level,
+        pinned,
         tags: typeof tags === "string" ? JSON.parse(tags) : tags,
         src: updatedSrc,
         updatedAt: new Date(),
@@ -178,5 +184,4 @@ export const updateAchievementWithUpload = async (
   }
 };
 
-
-// 
+//

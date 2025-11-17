@@ -251,7 +251,8 @@ model Achievement {
   level       Level
   tags        String[]
 
-  status Boolean @default(true)
+  status Boolean @default(false)
+  pinned Boolean @default(false)
 
   uploadStatus UploadStatus @default(no_file)
 
