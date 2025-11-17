@@ -56,7 +56,21 @@ export const createAchievementWithUpload = async (
       webpBuffer = buffer;
     }
 
-    const filename = `${Date.now()}-${file.originalname.split(".")[0]}.webp`;
+    // 🔥 PERUBAHAN DI SINI - Format timestamp: detikmenitjamtanggalbulantahun
+    const now = new Date();
+    const seconds = now.getSeconds().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const hours = now.getHours().toString().padStart(2, "0");
+    const date = now.getDate().toString().padStart(2, "0");
+    const month = (now.getMonth() + 1).toString().padStart(2, "0");
+    const year = now.getFullYear();
+
+    // const filename = `${Date.now()}-${file.originalname.split(".")[0]}.webp`;
+    // const gridfsUrl = await uploadToGridFS(req, webpBuffer, filename);
+
+    const timestamp = `${seconds}${minutes}${hours}${date}${month}${year}`;
+    const filename = `${timestamp}.webp`;
+
     const gridfsUrl = await uploadToGridFS(req, webpBuffer, filename);
 
     const achievement = await saveAchievementToDB({
@@ -143,7 +157,18 @@ export const updateAchievementWithUpload = async (
         webpBuffer = buffer;
       }
 
-      const filename = `${Date.now()}-${file.originalname.split(".")[0]}.webp`;
+      // 🔥 PERUBAHAN DI SINI - Format timestamp: detikmenitjamtanggalbulantahun
+      const now = new Date();
+      const seconds = now.getSeconds().toString().padStart(2, "0");
+      const minutes = now.getMinutes().toString().padStart(2, "0");
+      const hours = now.getHours().toString().padStart(2, "0");
+      const date = now.getDate().toString().padStart(2, "0");
+      const month = (now.getMonth() + 1).toString().padStart(2, "0");
+      const year = now.getFullYear();
+
+      const timestamp = `${seconds}${minutes}${hours}${date}${month}${year}`;
+      const filename = `${timestamp}.webp`;
+
       updatedSrc = await uploadToGridFS(req, webpBuffer, filename);
 
       await deleteFromCloudinary(publicId);
