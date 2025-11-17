@@ -11,7 +11,10 @@ import {
 import multer from "multer";
 
 // import { createAchievement } from "../controllers/achievement/achievement.controller";
-import { createAchievementWithUpload } from "../controllers/achievement/text";
+import {
+  createAchievementWithUpload,
+  updateAchievementWithUpload,
+} from "../controllers/achievement/text";
 
 const upload = multer({
   limits: {
@@ -34,14 +37,11 @@ router.get("/:id", getAchievementById);
 
 // router.post("/", upload.single("files"), createAchievement);
 
-router.put("/:id", upload.single("files"), updateAchiement);
+// router.put("/:id", upload.single("files"), updateAchiement);
 
 router.delete("/:id", deleteAchiement);
 
-router.post(
-  "/",
-  upload.single("files"),
-  createAchievementWithUpload
-);
+router.put("/:id", upload.single("files"), updateAchievementWithUpload);
+router.post("/", upload.single("files"), createAchievementWithUpload);
 
 export default router;

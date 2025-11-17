@@ -32,6 +32,21 @@ export const createAchievementWithUpload = async (
     const file = req.file;
     if (!file) return res.status(400).json({ error: "File tidak ditemukan" });
 
+    // 🔥 PERUBAHAN DI SINI - Format timestamp: detikmenitjamtanggalbulantahun
+    const now = new Date();
+    const seconds = now.getSeconds().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const hours = now.getHours().toString().padStart(2, "0");
+    const date = now.getDate().toString().padStart(2, "0");
+    const month = (now.getMonth() + 1).toString().padStart(2, "0");
+    const year = now.getFullYear();
+
+    const timestamp = `${seconds}${minutes}${hours}${date}${month}${year}`;
+    const filename = `${timestamp}.webp`;
+
+    console.log("🔄 Nama file asli:", file.originalname);
+    console.log("🔄 Nama file baru:", filename);
+
     let quality = 85;
     let webpUrl = "";
     let publicId = "";
@@ -56,20 +71,8 @@ export const createAchievementWithUpload = async (
       webpBuffer = buffer;
     }
 
-    // 🔥 PERUBAHAN DI SINI - Format timestamp: detikmenitjamtanggalbulantahun
-    const now = new Date();
-    const seconds = now.getSeconds().toString().padStart(2, "0");
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    const hours = now.getHours().toString().padStart(2, "0");
-    const date = now.getDate().toString().padStart(2, "0");
-    const month = (now.getMonth() + 1).toString().padStart(2, "0");
-    const year = now.getFullYear();
-
     // const filename = `${Date.now()}-${file.originalname.split(".")[0]}.webp`;
     // const gridfsUrl = await uploadToGridFS(req, webpBuffer, filename);
-
-    const timestamp = `${seconds}${minutes}${hours}${date}${month}${year}`;
-    const filename = `${timestamp}.webp`;
 
     const gridfsUrl = await uploadToGridFS(req, webpBuffer, filename);
 
