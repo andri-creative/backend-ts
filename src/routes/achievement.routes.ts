@@ -3,18 +3,16 @@ import { Router } from "express";
 import {
   getAllAchievement,
   getAchievementById,
-  // createAchievement,
-  updateAchiement,
-  deleteAchiement,
 } from "../controllers/achievement.controller";
 // import { upload } from "../utils/gridfs";
 import multer from "multer";
+import multerUpload from "../middlewares/upload.middleware";
 
-// import { createAchievement } from "../controllers/achievement/achievement.controller";
 import {
-  createAchievementWithUpload,
-  updateAchievementWithUpload,
-} from "../controllers/achievement/text";
+  uploadPdfToWebp,
+  updatePdfToWebp,
+  deleteAchievement,
+} from "../controllers/achievement/achievement.controller";
 
 const upload = multer({
   limits: {
@@ -39,9 +37,10 @@ router.get("/:id", getAchievementById);
 
 // router.put("/:id", upload.single("files"), updateAchiement);
 
-router.delete("/:id", deleteAchiement);
+// router.put("/:id", upload.single("files"), updateAchievementWithUpload);
+// router.post("/", upload.single("files"), createAchievementWithUpload);
 
-router.put("/:id", upload.single("files"), updateAchievementWithUpload);
-router.post("/", upload.single("files"), createAchievementWithUpload);
-
+router.post("/upload", multerUpload.single("file"), uploadPdfToWebp);
+router.put("/:id", upload.single("file"), updatePdfToWebp);
+router.delete("/:id", deleteAchievement);
 export default router;

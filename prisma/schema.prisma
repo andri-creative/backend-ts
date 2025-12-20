@@ -1,7 +1,6 @@
 // ================= DATASOURCE & GENERATOR =================
 datasource db {
   provider = "mongodb"
-  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -233,10 +232,10 @@ enum Level {
 }
 
 enum UploadStatus {
-  pending
+  no_file
+  uploading
   completed
   failed
-  no_file
 }
 
 model Achievement {
@@ -250,6 +249,9 @@ model Achievement {
   category    Category
   level       Level
   tags        String[]
+
+  dropboxPath String?
+  dropboxId   String?
 
   status Boolean @default(false)
   pinned Boolean @default(false)

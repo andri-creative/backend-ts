@@ -59,8 +59,14 @@ app.get("/", (req, res) => {
     success: true,
     message: "Hello, World! 🚀",
     data: {
-      app: "Express + TypeScript + Prisma",
-      version: "1.0.0",
+      app: {
+        backend: "Express + TypeScript",
+        database: "MongoDB + Prisma",
+        deployment: "Vercel",
+        storage: "Cloudinary + Dropbox",
+        email: "Nodemailer"
+      },
+      version: "1.1.0",
     },
   });
 });
